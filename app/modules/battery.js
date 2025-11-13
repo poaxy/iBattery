@@ -112,6 +112,32 @@ const disable_battery_limiter = async () => {
 
 }
 
+const enable_charging = async () => {
+
+    try {
+        await exec_async( `${ battery } charging on` )
+        const status = await get_battery_status()
+        return status?.percentage
+    } catch ( e ) {
+        log( 'Error enabling charging: ', e )
+        alert( e.message )
+    }
+
+}
+
+const disable_charging = async () => {
+
+    try {
+        await exec_async( `${ battery } charging off` )
+        const status = await get_battery_status()
+        return status?.percentage
+    } catch ( e ) {
+        log( 'Error disabling charging: ', e )
+        alert( e.message )
+    }
+
+}
+
 const low_err_return_false = ( ...errdata ) => {
     log( 'Error in shell call: ', ...errdata )
     return false
@@ -244,5 +270,7 @@ module.exports = {
     initialize_battery,
     is_limiter_enabled,
     get_battery_status,
-    uninstall_battery
+    uninstall_battery,
+    enable_charging,
+    disable_charging
 }
