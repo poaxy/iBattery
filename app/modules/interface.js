@@ -1,5 +1,5 @@
 const { shell, app, Tray, Menu, powerMonitor, nativeTheme } = require( 'electron' )
-const { enable_battery_limiter, disable_battery_limiter, initialize_battery, is_limiter_enabled, get_battery_status, uninstall_battery } = require( './battery' )
+const { enable_battery_limiter, disable_battery_limiter, initialize_battery, is_limiter_enabled, get_battery_status, uninstall_battery, enable_charging, disable_charging } = require( './battery' )
 const { log } = require( "./helpers" )
 const { get_logo_template } = require( './theme' )
 const { get_force_discharge_setting, update_force_discharge_setting } = require( './settings' )
@@ -15,7 +15,7 @@ const generate_app_menu = async () => {
 
     try {
         // Get battery and daemon status
-        const { battery_state, daemon_state, maintain_percentage=80, percentage } = await get_battery_status()
+        const { battery_state, daemon_state, maintain_percentage=80, percentage, charging } = await get_battery_status()
 
         // Check if limiter is on
         const limiter_on = await is_limiter_enabled()
@@ -52,6 +52,10 @@ const generate_app_menu = async () => {
             {
                 label: `Power: ${ daemon_state }`,
                 enabled: false
+            },
+            {
+                label: charging ? 'Disable charging' : 'Enable charging',
+                click: charging ? disable_charging_handler : enable_charging_handler
             },
             {
                 type: 'separator'
@@ -239,6 +243,34 @@ async function disable_limiter() {
         await refresh_tray()
     } catch ( e ) {
         log( `Error in disable_limiter: `, e )
+    }
+
+}
+
+async function enable_charging_handler() {
+
+    try {
+        log( 'Enable charging manually' )
+        const percent_left = await enable_charging()
+        log( `Manual charging enabled, percentage remaining: ${ percent_left }` )
+        await refresh_logo( percent_left )
+        await refresh_tray( true )
+    } catch ( e ) {
+        log( `Error enabling charging manually: `, e )
+    }
+
+}
+
+async function disable_charging_handler() {
+
+    try {
+        log( 'Disable charging manually' )
+        const percent_left = await disable_charging()
+        log( `Manual charging disabled, percentage remaining: ${ percent_left }` )
+        await refresh_logo( percent_left )
+        await refresh_tray( true )
+    } catch ( e ) {
+        log( `Error disabling charging manually: `, e )
     }
 
 }
